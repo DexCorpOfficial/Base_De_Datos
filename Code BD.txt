@@ -1,0 +1,609 @@
+﻿Código bd
+create database BDBandapp;
+use BDBandapp;
+
+
+CREATE TABLE BDBandapp.cuenta(
+id INT NOT NULL AUTO_INCREMENT,
+nombre varchar (50) NOT NULL unique,
+foto_perfil blob not null,
+biografia varchar (200),
+seguidores int not null DEFAULT 0,
+seguidos int not null DEFAULT 0,
+fecha_creacion datetime NOT NULL default now(),
+musico boolean NOT NULL default 0,
+activo boolean NOT NULL default 1,
+privado boolean NOT NULL default 1,
+PRIMARY KEY (id)
+);
+
+
+CREATE TABLE BDBandapp.interactuan (
+id_emisor int not null,
+id_receptor int not null,
+PRIMARY KEY (id_emisor, id_receptor),
+foreign key (id_emisor) references cuenta(id),
+foreign key (id_receptor) references cuenta(id)
+);
+CREATE TABLE BDBandapp.instrumentos (
+id_de_cuenta INT NOT NULL,
+instrumentos VARCHAR(100),
+PRIMARY KEY (id_de_cuenta, instrumentos),
+foreign key (id_de_cuenta) references cuenta(id)
+);
+
+
+CREATE TABLE BDBandapp.banda (
+id INT NOT NULL auto_increment,
+id_de_miembro int not null,
+id_admin int not null,
+nombre varchar (50) not null unique,
+activo boolean not null default 1,
+PRIMARY KEY (id),
+foreign key (id_de_miembro) references cuenta(id)
+);
+
+
+CREATE TABLE BDBandapp.genero (
+id INT NOT NULL,
+id_de_cuenta int not null,
+descripcion varchar (100) not null,
+activo boolean not null default 1,
+PRIMARY KEY (id),
+foreign key (id_de_cuenta) references cuenta(id)
+);
+
+
+CREATE TABLE BDBandapp.interaccion (
+id INT NOT NULL auto_increment,
+id_emisor int not null,
+id_receptor int not null,
+fecha datetime not null default now(),
+notificacion varchar (200) not null,
+PRIMARY KEY (id),
+foreign key (id_emisor) references interactuan(id_emisor),
+foreign key (id_receptor) references interactuan(id_receptor)
+);
+
+
+CREATE TABLE BDBandapp.llamada (
+id_de_interaccion INT NOT NULL,
+hora_inicio datetime not null default now(),
+hora_fin datetime not null,
+PRIMARY KEY (id_de_interaccion),
+foreign key (id_de_interaccion) references interaccion(id)
+);
+
+
+CREATE TABLE BDBandapp.mensajes (
+id_de_interaccion INT NOT NULL,
+contenido varchar (250) not null,
+activo boolean not null default 1,
+PRIMARY KEY (id_de_interaccion),
+foreign key (id_de_interaccion) references interaccion(id)
+);
+
+
+CREATE TABLE BDBandapp.seguido (
+id_de_interaccion INT NOT NULL,
+PRIMARY KEY (id_de_interaccion),
+foreign key (id_de_interaccion) references interaccion(id)
+);
+
+
+CREATE TABLE BDBandapp.uploads (
+id INT NOT NULL auto_increment,
+id_de_cuenta int not null,
+fecha_pub datetime not null default now(),
+n_upvotes int not null default 0,
+tipo varchar (11) not null comment 'Aca ponemos si es tipo post, comentario o evento',
+activo boolean not null default 1,
+PRIMARY KEY (id),
+foreign key (id_de_cuenta) references cuenta(id)
+);
+
+
+
+
+CREATE TABLE BDBandapp.post (
+id_de_uploads INT NOT NULL,
+descripcion varchar (300),
+media blob not null,
+tipo varchar (6) not null comment 'aca ponemos va si es del feed o evento', 
+id_de_banda int comment 'puede ser null porque puede ser del feed directramente',
+PRIMARY KEY (id_de_uploads),
+foreign key (id_de_uploads) references uploads(id)
+);
+
+
+CREATE TABLE BDBandapp.evento (
+id_de_uploads INT NOT NULL,
+fecha_inicio datetime not null default now(),
+fecha_fin datetime not null,
+descripcion varchar (300) not null,
+Nombre varchar (50) not null unique,
+PRIMARY KEY (id_de_uploads),
+foreign key (id_de_uploads) references uploads(id)
+);
+
+
+CREATE TABLE BDBandapp.comentario (
+id_de_uploads INT NOT NULL,
+id_de_post int not null,
+contenido varchar (250) not null,
+PRIMARY KEY (id_de_uploads),
+foreign key (id_de_uploads) references uploads(id)
+);
+
+
+CREATE TABLE BDBandapp.forman_parte (
+id_de_cuenta int not null,
+id_de_banda int not null,
+PRIMARY KEY (id_de_cuenta, id_de_banda),
+foreign key (id_de_cuenta) references cuenta(id),
+foreign key (id_de_banda) references banda(id)
+);
+
+
+CREATE TABLE BDBandapp.interactua_con (
+id_de_uploads int not null,
+id_de_cuenta int not null,
+upvote boolean default 0,
+PRIMARY KEY (id_de_uploads, id_de_cuenta),
+foreign key (id_de_uploads) references uploads(id),
+foreign key (id_de_cuenta) references cuenta(id)
+);
+
+
+CREATE TABLE BDBandapp.participan (
+id_de_evento int not null,
+id_de_cuenta int not null,
+PRIMARY KEY (id_de_evento, id_de_cuenta),
+foreign key (id_de_evento) references evento(id_de_uploads),
+foreign key (id_de_cuenta) references cuenta(id)
+);
+
+
+CREATE TABLE BDBandapp.eventoTiene (
+id_de_evento int not null,
+id_de_post int not null,
+PRIMARY KEY (id_de_post),
+foreign key (id_de_evento) references evento(id_de_uploads),
+foreign key (id_de_post) references post(id_de_uploads)
+);
+
+
+
+
+CREATE TABLE BDBandapp.responde (
+id_padre int not null,
+id_hijo int not null,
+PRIMARY KEY (id_hijo),
+foreign key (id_padre) references comentario(id_de_uploads),
+foreign key (id_hijo) references comentario(id_de_uploads)
+);
+
+
+ALTER TABLE bdbandapp.cuenta
+MODIFY COLUMN musico BIT(1),
+MODIFY COLUMN activo BIT(1),
+MODIFY COLUMN privado BIT(1);
+
+
+ALTER TABLE bdbandapp.banda
+MODIFY COLUMN activo BIT(1);
+
+
+ALTER TABLE bdbandapp.genero
+MODIFY COLUMN activo BIT(1);
+
+
+ALTER TABLE bdbandapp.mensajes
+MODIFY COLUMN activo BIT(1);
+
+
+ALTER TABLE bdbandapp.uploads
+MODIFY COLUMN n_upvotes BIT(1),
+MODIFY COLUMN activo BIT(1);
+
+
+ALTER TABLE BDBandapp.interactua_con
+MODIFY COLUMN upvote BIT(1);
+
+
+create user 'foliveraAdmin'@'localhost' identified by 'Bandapp$';
+create user 'mcustodioAdmin'@'localhost'  identified by 'Bandapp$';
+create user 'lriveroAdmin'@'localhost' identified by 'Bandapp$';
+create user 'tdenisAdmin'@'localhost'  identified by 'Bandapp$';
+create user 'SIGENadmin'@'localhost' identified by 'Q1w2e3r4$';
+
+
+create role 'admins';
+
+
+grant select, insert, update, show view on bdbandapp.* TO 'admin';
+
+
+grant all privileges on bdbandapp.* TO 'SIGENadmin'@'localhost';
+
+
+grant 'admins' to 'foliveraoAdmin'@'localhost';
+grant 'admins' to 'mcustodioAdmin'@'localhost';
+grant 'admins' to 'lriveroAdmin'@'localhost';
+grant 'admins' to 'tdenisoAdmin'@'localhost';
+
+Datos precargados
+
+
+INSERT INTO BDBandapp.cuenta (id, nombre, foto_perfil, biografia, seguidores, seguidos, fecha_creacion, musico, activo) 
+VALUES (1,'foliveraAdmin', NULL, 'Admin Bandapp', 100, 200, NOW(), true, true);
+
+
+INSERT INTO BDBandapp.cuenta (id, nombre, foto_perfil, biografia, seguidores, seguidos, fecha_creacion, musico, activo) 
+VALUES (2, 'Maria', NULL, 'Amante de la musica', 150, 300, NOW(), false, true);
+
+
+INSERT INTO BDBandapp.cuenta (id, nombre, foto_perfil, biografia, seguidores, seguidos, fecha_creacion, musico, activo) 
+VALUES (3,'lriveroAdmin', NULL, 'Admin Bandapp', 100, 200, NOW(), true, true);
+
+
+INSERT INTO BDBandapp.cuenta (id, nombre, foto_perfil, biografia, seguidores, seguidos, fecha_creacion, musico, activo) 
+VALUES (4,'tdenisAdmin', NULL, 'Admin Bandapp', 100, 200, NOW(), true, true);
+
+
+INSERT INTO BDBandapp.cuenta (id, nombre, foto_perfil, biografia, seguidores, seguidos, fecha_creacion, musico, activo) 
+VALUES (5, 'mcustodioAdmin', NULL, ' Admin bandapp', 150, 300, NOW(), true, true);
+
+
+
+
+INSERT INTO BDBandapp.interactuan (id_emisor, id_receptor) 
+VALUES (1, 2);
+
+
+INSERT INTO BDBandapp.instrumentos (id_de_cuenta, instrumentos)
+VALUES (1, 'Guitarra');
+
+
+INSERT INTO BDBandapp.instrumentos (id_de_cuenta, instrumentos)
+VALUES (2, "");
+
+
+INSERT INTO BDBandapp.banda (id, id_de_miembro, id_admin, nombre, activo) 
+VALUES (1, 2, 1 ,'LosRockers', true);
+INSERT INTO BDBandapp.banda (id, id_de_miembro, id_admin, nombre, activo) 
+VALUES (2, 1, 3 ,'Loscracks', true);
+-- Insertar datos en la tabla genero
+INSERT INTO BDBandapp.genero (id, id_de_cuenta, descripcion, activo) 
+VALUES (1, 1, 'Rock', true);
+
+
+INSERT INTO BDBandapp.genero (id, id_de_cuenta, descripcion, activo) 
+VALUES (2, 2, 'Pop', false);
+
+
+INSERT INTO BDBandapp.interaccion (id, id_emisor, id_receptor , fecha, notificacion) 
+VALUES (1, 1, 2 , NOW(), 'Nueva llamada');
+
+
+INSERT INTO BDBandapp.interaccion (id, id_emisor, id_receptor, fecha, notificacion) 
+VALUES (2, 1, 2,  NOW(), 'Nuevo comentario');
+
+
+INSERT INTO BDBandapp.interaccion (id, id_emisor, id_receptor, fecha, notificacion) 
+VALUES (3, 1, 2,  NOW(), 'Seguidor');
+
+
+
+
+INSERT INTO BDBandapp.llamada (id_de_interaccion, hora_inicio, hora_fin) 
+VALUES (1, '2024-09-11 12:00:00', '2024-09-11 12:30:00');
+
+
+INSERT INTO BDBandapp.mensajes (id_de_interaccion, contenido, activo) 
+VALUES (2, 'Hola, ¿cómo estás?', true);
+
+
+INSERT INTO BDBandapp.seguido (id_de_interaccion) 
+VALUES (3);
+
+
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (1,1, NOW(), 10,'post', true);
+INSERT INTO BDBandapp.uploads (id, id_de_cuenta, fecha_pub, n_upvotes, tipo, activo) 
+VALUES (2,1, NOW(), 11, 'post', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (3,1, NOW(), 12,'evento', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes, tipo, activo) 
+VALUES (4,1, NOW(), 13, 'comentario', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (5,2, NOW(), 14,'comentario', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (6,2, NOW(), 15,'evento', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (7,2, NOW(), 16,'evento', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (8,1, NOW(), 17,'evento', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (9,1, '2024-10-15 18:00:00', 18,'post', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (10,2, '2024-9-30 18:00:00', 19,'post', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (11,1, '2024-10-13 18:00:00', 20,'post', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (12,2, '2023-10-15 18:00:00', 21,'post', true);
+INSERT INTO BDBandapp.uploads (id,id_de_cuenta, fecha_pub, n_upvotes,tipo, activo) 
+VALUES (13,2, '2024-9-17 18:00:00', 22,'post', true);
+
+
+
+
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (1, 'Nuevo sencillo lanzado', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (2, 'Prueba bandas', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (9, 'banda1post3', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (10, 'bandapost4', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (11, 'bandapost5', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo, id_de_banda) 
+VALUES (12, 'bandapost6', NULL, 'banda', 1);
+INSERT INTO BDBandapp.post (id_de_uploads, descripcion, media, tipo) 
+VALUES (13, 'FeedPost', NULL, 'feed');
+
+
+INSERT INTO BDBandapp.evento (id_de_uploads, fecha_inicio, fecha_fin, descripcion, Nombre) 
+VALUES (3, '2024-09-15 18:00:00', '2024-09-15 21:00:00', 'Concierto en vivo', 'Concierto Primavera');
+
+
+INSERT INTO BDBandapp.evento (id_de_uploads, fecha_inicio, fecha_fin, descripcion, Nombre) 
+VALUES (6, '2024-09-30 18:00:00', '2024-09-15 21:00:00', 'Concierto en directo', 'Concierto');
+
+
+INSERT INTO BDBandapp.evento (id_de_uploads, fecha_inicio, fecha_fin, descripcion, Nombre) 
+VALUES (7, '2024-08-30 18:00:00', '2024-09-15 21:00:00', 'festival', 'Concierto electronica');
+
+
+INSERT INTO BDBandapp.evento (id_de_uploads, fecha_inicio, fecha_fin, descripcion, Nombre) 
+VALUES (8, '2024-11-30 18:00:00', '2024-11-30 21:00:00', 'festival', 'evento futuro');
+
+
+INSERT INTO BDBandapp.comentario (id_de_uploads, id_de_post, contenido) 
+VALUES (4, 1, '¡padre!');
+INSERT INTO BDBandapp.comentario (id_de_uploads, id_de_post, contenido) 
+VALUES (5, 1, '¡Hijo!');
+
+
+
+
+INSERT INTO BDBandapp.forman_parte (id_de_cuenta, id_de_banda) 
+VALUES (1, 1);
+INSERT INTO BDBandapp.forman_parte (id_de_cuenta, id_de_banda) 
+VALUES (2, 1);
+INSERT INTO BDBandapp.forman_parte (id_de_cuenta, id_de_banda) 
+VALUES (3, 2);
+INSERT INTO BDBandapp.forman_parte (id_de_cuenta, id_de_banda) 
+VALUES (1, 2);
+
+
+INSERT INTO BDBandapp.interactuan_con (id_de_uploads, id_de_cuenta, upvote) 
+VALUES (1, 1, true);
+INSERT INTO BDBandapp.interactuan_con (id_de_uploads, id_de_cuenta, upvote) 
+VALUES (1, 2, true);
+INSERT INTO BDBandapp.interactuan_con (id_de_uploads, id_de_cuenta, upvote) 
+VALUES (1, 3, true);
+
+
+INSERT INTO BDBandapp.participan (id_de_evento, id_de_cuenta) 
+VALUES (3, 2);
+INSERT INTO BDBandapp.participan (id_de_evento, id_de_cuenta) 
+VALUES (3, 1);
+INSERT INTO BDBandapp.participan (id_de_evento, id_de_cuenta) 
+VALUES (6, 3);
+
+
+INSERT INTO BDBandapp.eventoTiene (id_de_evento, id_de_post) 
+VALUES (3, 1);
+
+
+INSERT INTO BDBandapp.responde (id_padre, id_hijo) 
+VALUES (4, 5);
+
+
+
+
+
+
+Consulta padre hijo
+
+
+SELECT 
+    c1.id_de_uploads AS upload_padre,
+    c1.contenido AS comentario_padre,
+    c2.id_de_uploads AS upload_hijo,
+    c2.contenido AS comentario_hijo,
+    p.descripcion AS descripcion_post,
+    up.fecha_pub AS fecha_publicacion,
+    up.tipo AS tipo_publicacion
+FROM 
+    BDBandapp.responde r
+JOIN 
+    BDBandapp.comentario c1 ON c1.id_de_uploads = r.id_padre
+JOIN 
+    BDBandapp.comentario c2 ON c2.id_de_uploads = r.id_hijo
+JOIN 
+    BDBandapp.post p ON p.id_de_uploads = c1.id_de_post
+JOIN 
+    BDBandapp.uploads up ON up.id = p.id_de_uploads
+WHERE 
+    c2.id_de_uploads IS NOT NULL;
+
+
+
+
+Consulta interaccion
+SELECT 
+    i.id AS interaccion_id,
+    i.id_emisor AS id_emisor,
+    i.id_receptor AS id_receptor,
+    i.fecha,
+    i.notificacion,
+    CASE 
+        WHEN l.id_de_interaccion IS NOT NULL THEN 'Llamada'
+        WHEN m.id_de_interaccion IS NOT NULL THEN 'Mensaje'
+        WHEN s.id_de_interaccion IS NOT NULL THEN 'Seguido'
+        ELSE 'Desconocido'
+    END AS tipo_interaccion,
+    COALESCE(l.hora_fin, 'N/A') AS hora_fin_llamada,
+    COALESCE(m.contenido, 'N/A') AS mensaje_contenido,
+    COALESCE(s.mensaje, 'N/A') AS seguido_mensaje
+FROM 
+    BDBandapp.interaccion i
+LEFT JOIN 
+    BDBandapp.llamada l ON i.id = l.id_de_interaccion
+LEFT JOIN 
+    BDBandapp.mensajes m ON i.id = m.id_de_interaccion
+LEFT JOIN 
+    BDBandapp.seguido s ON i.id = s.id_de_interaccion
+WHERE 
+    i.id_emisor = 1 OR i.id_receptor = 1
+ORDER BY 
+    i.fecha;
+
+
+Consulta 1
+SELECT p.id_de_uploads, p.descripcion, p.media, p.tipo, p.id_de_banda, u.fecha_pub, u.n_upvotes
+FROM BDBandapp.post p
+JOIN BDBandapp.uploads u ON p.id_de_uploads = u.id
+JOIN BDBandapp.cuenta c ON u.id_de_cuenta = c.id
+WHERE c.id = 1;
+
+
+
+
+Consulta 2
+SELECT c.contenido, c.id_de_uploads, c.id_de_post
+FROM BDBandapp.comentario c
+WHERE c.id_de_post = 1;
+
+
+
+
+
+
+
+
+Consulta 3
+SELECT e.Nombre, e.descripcion, e.fecha_inicio, e.fecha_fin
+FROM BDBandapp.evento e
+WHERE e.fecha_inicio BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY);
+
+
+
+
+
+
+Consulta 4
+SELECT p.id_de_uploads, p.descripcion, p.media, p.tipo
+FROM BDBandapp.post p
+JOIN BDBandapp.uploads u ON p.id_de_uploads = u.id
+WHERE p.id_de_banda = 1
+ORDER BY u.fecha_pub DESC
+LIMIT 5;
+
+
+
+
+Consulta 5
+SELECT p.id_de_uploads, p.descripcion, p.media, p.tipo, u.fecha_pub, u.n_upvotes
+FROM BDBandapp.post p
+JOIN BDBandapp.uploads u ON p.id_de_uploads = u.id
+WHERE u.fecha_pub >= NOW() - INTERVAL 30 DAY
+ORDER BY u.n_upvotes DESC;
+
+
+
+
+Consulta 6
+SELECT b.id, b.nombre, b.activo
+FROM BDBandapp.banda b
+JOIN BDBandapp.forman_parte fp ON b.id = fp.id_de_banda
+WHERE fp.id_de_cuenta = 1;
+
+
+
+
+
+
+
+
+
+
+Consulta 7
+SELECT 
+    c.id AS usuario_id,
+    c.nombre AS usuario_nombre
+FROM 
+    BDBandapp.interactuan_con ic
+JOIN 
+    BDBandapp.cuenta c ON ic.id_de_cuenta = c.id
+WHERE 
+    ic.id_de_uploads = 1;
+
+
+Consulta 8
+SELECT 
+    c.id AS usuario_id,
+    c.nombre AS usuario_nombre
+FROM 
+    BDBandapp.participan p
+JOIN 
+    BDBandapp.cuenta c ON p.id_de_cuenta = c.id
+WHERE 
+    p.id_de_evento = 3;
+
+
+Consulta 9
+SELECT 
+    e.id_de_uploads AS evento_id,
+    e.Nombre AS evento_nombre,
+    e.descripcion AS evento_descripcion,
+    e.fecha_inicio AS evento_fecha_inicio,
+    e.fecha_fin AS evento_fecha_fin
+FROM 
+    BDBandapp.participan p
+JOIN 
+    BDBandapp.evento e ON p.id_de_evento = e.id_de_uploads
+WHERE 
+    p.id_de_cuenta = 1;
+
+
+
+
+
+
+
+
+Consulta 10
+
+
+SELECT 
+    u.id AS post_id,
+    u.fecha_pub AS post_fecha,
+    p.descripcion AS post_descripcion,
+    COUNT(c.id_de_post) AS numero_comentarios
+FROM 
+    BDBandapp.uploads u
+JOIN 
+    BDBandapp.post p ON u.id = p.id_de_uploads
+LEFT JOIN 
+    BDBandapp.comentario c ON p.id_de_uploads = c.id_de_post
+WHERE 
+    u.id_de_cuenta = 1
+    AND u.tipo = 'post'
+GROUP BY 
+    u.id, u.fecha_pub, p.descripcion
+ORDER BY 
+    numero_comentarios DESC;
